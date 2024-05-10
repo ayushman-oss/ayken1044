@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Enhanced MP3 Player</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        text-align: center;
+        margin: 0;
+        padding: 0;
+        overflow: hidden; /* Hide horizontal scroll bar */
+        background-color: #57BB8A; /* Random shade of green */
+        color: white;
+    }
+
+    h1 {
+        color: #333;
+        margin-top: 20px;
+    }
+
+    #audio-controls {
+        margin-top: 20px;
+    }
+
+    input[type="file"] {
+        display: none;
+    }
+
+    .btn {
+        background-color: #4CAF50;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        margin: 5px;
+        transition: background-color 0.3s;
+    }
+
+    .btn:hover {
+        background-color: #45a049;
+    }
+
+    #play-btn, #pause-btn, #stop-btn, #prev-btn, #next-btn, #shuffle-btn {
+        background-color: #007bff;
+    }
+
+    #play-btn:hover, #pause-btn:hover, #stop-btn:hover, #prev-btn:hover, #next-btn:hover, #shuffle-btn:hover {
+        background-color: #0056b3;
+    }
+
+    .control-btn {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        margin: 5px;
+        border: none;
+        cursor: pointer;
+        outline: none;
+    }
+
+    .control-icon {
+        width: 20px;
+        height: 20px;
+        fill: white;
+    }
+
+    #audio {
+        visibility: hidden;
+    }
+
+    #slider-container {
+        width: 80%;
+        margin: 20px auto;
+        position: relative;
+    }
+
+    #slider {
+        width: 100%;
+    }
+
+    #time-display {
+        margin-top: 10px;
+        font-size: 14px;
+    }
+
+    #playlist-container {
+        height: calc(100vh * 0.4); /* Adjust the value as needed */
+        overflow-y: auto;
+    }
+
+    #playlist {
+        list-style-type: none;
+        padding: 0;
+        text-align: left;
+    }
+
+    #playlist li {
+        cursor: pointer;
+        padding: 10px;
+        transition: background-color 0.3s;
+    }
+
+    #playlist li:hover {
+        background-color: #f0f0f0;
+    }
+
+    #playlist li.active {
+        background-color: #007bff;
+        color: white;
+    }
+
+    #song-display {
+        margin-top: 20px; /* Added margin */
+        font-size: 18px;
+        font-weight: bold;
+    }
+</style>
+</head>
+<body>
+    <h1>AYKEN</h1>
+    <label for="audio-file" class="btn">Choose Audio File</label>
+    <input type="file" id="audio-file" accept="audio/mp3, audio/flac, audio/wav" multiple>
+    <audio id="audio" controls>
+        Your browser does not support the audio element.
+    </audio>
+    <div class="container" id="audio-controls">
+        <div class="row">
+            <div class="col">
+                <button id="prev-btn" class="control-btn"><svg class="control-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/><path d="M0 0h24v24H0z" fill="none"/></svg></button>
+                <button id="play-btn" class="control-btn"><svg class="control-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M8 5v14l11-7z"/><path d="M0 0h24v24H0z" fill="none"/></svg></button>
+                <button id="pause-btn" class="control-btn" style="display: none;"><svg class="control-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg></button>
+                <button id="stop-btn" class="control-btn"><svg class="control-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M6 6h12v12H6z"/><path d="M0 0h24v24H0z" fill="none"/></svg></button>
+                <button id="next-btn" class="control-btn"><svg class="control-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 6h-2v12h2zm-3.5 6l-8.5 6V6z"/><path d="M0 0h24v24H0z" fill="none"/></svg></button>
+                <button id="shuffle-btn" class="control-btn"><svg class="control-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M6 12c1.5-3 3-6 4.5-3s3 6 4.5 3s3-6 4.5 3s3 6 4.5-3s3-6 4.5 3"/></svg></button>
+                <input type="range" id="speed-control" min="0.5" max="2" step="0.1" value="1">
+            </div>
+        </div>
+    </div>
+    <div id="song-display-container">
+        <div id="song-display"></div>
+    </div>
+    <div id="slider-container">
+        <input type="range" id="slider" min="0" value="0">
+        <div id="time-display"></div>
+    </div>
+    <div id="playlist-container">
+        <ul id="playlist"></ul>
+    </div>
+
+    <script>
+        const audioFileInput = document.getElementById('audio-file');
+        const audioElement = document.getElementById('audio');
+        const playButton = document.getElementById('play-btn');
+        const pauseButton = document.getElementById('pause-btn');
+        const stopButton = document.getElementById('stop-btn');
+        const prevButton = document.getElementById('prev-btn');
+        const nextButton = document.getElementById('next-btn');
+        const shuffleButton = document.getElementById('shuffle-btn');
+        const speedControl = document.getElementById('speed-control');
+        const slider = document.getElementById('slider');
+        const timeDisplay = document.getElementById('time-display');
+        const playlist = document.getElementById('playlist');
+        const songDisplay = document.getElementById('song-display');
+        let currentIndex = 0;
+        let audioSource = null;
+
+        playButton.addEventListener('click', () => {
+            if (!audioSource) return;
+            if (audioElement.paused) {
+                audioElement.play();
+                playButton.style.display = 'none';
+                pauseButton.style.display = 'inline-block';
+            } else {
+                audioElement.pause();
+                playButton.style.display = 'inline-block';
+                pauseButton.style.display = 'none';
+            }
+        });
+        pauseButton.addEventListener('click',()=>{
+            if(!audioSource)return;
+            if(!audioElement.paused){
+                audioElement.pause();
+                playButton.style.display = 'inline-block';
+                pauseButton.style.display = 'none';
+                
+            }
+        })
+
+        stopButton.addEventListener('click', () => {
+            if (!audioSource) return;
+            audioElement.pause();
+            audioElement.currentTime = 0;
+            playButton.style.display = 'inline-block';
+            pauseButton.style.display = 'none';
+        });
+
+        prevButton.addEventListener('click', () => {
+            if (!audioSource) return;
+            currentIndex = (currentIndex - 1 + playlist.children.length) % playlist.children.length;
+            loadTrack(currentIndex);
+        });
+
+        nextButton.addEventListener('click', () => {
+            if (!audioSource) return;
+            loadNextTrack();
+        });
+
+        shuffleButton.addEventListener('click', () => {
+            if (!audioSource) return;
+            shufflePlaylist();
+        });
+
+        speedControl.addEventListener('input', () => {
+            if (!audioSource) return;
+            audioElement.playbackRate = parseFloat(speedControl.value);
+        });
+
+        audioFileInput.addEventListener('change', (event) => {
+            const files = event.target.files;
+            if (!files.length) return;
+            clearPlaylist();
+            for (let i = 0; i < files.length; i++) {
+                addTrackToPlaylist(files[i], i);
+            }
+            loadTrack(0);
+        });
+
+        function clearPlaylist() {
+            playlist.innerHTML = '';
+        }
+
+        function addTrackToPlaylist(file, index) {
+            const li = document.createElement('li');
+            li.textContent = file.name;
+            li.addEventListener('click', () => {
+                loadTrack(index);
+            });
+            playlist.appendChild(li);
+        }
+
+        function loadTrack(index) {
+            if (index < 0 || index >= playlist.children.length) return;
+            currentIndex = index;
+            const file = audioFileInput.files[currentIndex];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                audioSource = e.target.result;
+                audioElement.src = audioSource;
+                audioElement.load();
+                audioElement.play(); // Autoplay
+                playButton.style.display = 'none';
+                pauseButton.style.display = 'inline-block';
+                updateSlider();
+                updateSongDisplay(file.name);
+            };
+            reader.readAsDataURL(file);
+        }
+
+        audioElement.addEventListener('ended', () => {
+            playButton.style.display = 'inline-block';
+            pauseButton.style.display = 'none';
+            loadNextTrack();
+        });
+
+        function loadNextTrack() {
+            if (playlist.children.length < 2) return;
+            let nextIndex = currentIndex;
+            while (nextIndex === currentIndex) {
+                nextIndex = Math.floor(Math.random() * playlist.children.length);
+            }
+            loadTrack(nextIndex);
+        }
+
+        function shufflePlaylist() {
+            for (let i = playlist.children.length; i >= 0; i--) {
+                playlist.appendChild(playlist.children[Math.random() * i | 0]);
+            }
+        }
+
+        function updateSlider() {
+            audioElement.addEventListener('loadedmetadata', () => {
+                slider.max = audioElement.duration;
+            });
+
+            audioElement.addEventListener('timeupdate', () => {
+                slider.value = audioElement.currentTime;
+                updateCurrentTime();
+            });
+        }
+
+        function updateCurrentTime() {
+            const currentTime = formatTime(audioElement.currentTime);
+            const duration = formatTime(audioElement.duration);
+            timeDisplay.textContent = currentTime + ' / ' + duration;
+        }
+
+        function formatTime(time) {
+            const minutes = Math.floor(time / 60);
+            const seconds = Math.floor(time % 60);
+            return `${padZero(minutes)}:${padZero(seconds)}`;
+        }
+
+        function padZero(num) {
+            return (num < 10) ? '0' + num : num;
+        }
+
+        slider.addEventListener('input', () => {
+            audioElement.currentTime = slider.value;
+            updateCurrentTime();
+        });
+
+        function updateSongDisplay(songName) {
+            songDisplay.textContent = songName;
+        }
+    </script>
+</body>
+</html>
