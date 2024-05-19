@@ -759,7 +759,7 @@
             }
 
             function shufflePlaylist() {
-		previousIndex=currentIndex;
+                previousIndex=currentIndex;
                 return Math.floor(Math.random() * loadedFiles.length);
             }
 
@@ -826,11 +826,6 @@
 		navigator.mediaSession.setActionHandler('seekto', (details) => {
  			 updatePositionState();
 				});
-                
-        
-
-
-               
         setInterval(() => {
         
             heading.style.color = heading.style.color === 'beige' ? '#1d271e' : 'beige';
