@@ -759,6 +759,7 @@
             }
 
             function shufflePlaylist() {
+		previousIndex=currentIndex;
                 return Math.floor(Math.random() * loadedFiles.length);
             }
 
